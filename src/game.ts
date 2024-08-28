@@ -166,7 +166,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ...currentState.player,
             x: Math.max(
               0,
-              currentState.player.x - gameSettings.playerSpeed * delta
+              currentState.player.x - gameSettings.playerSpeed * delta,
             ),
           },
         };
@@ -177,7 +177,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ...currentState.player,
             x: Math.min(
               gameSettings.screenWidth,
-              currentState.player.x + gameSettings.playerSpeed * delta
+              currentState.player.x + gameSettings.playerSpeed * delta,
             ),
           },
         };
@@ -185,7 +185,7 @@ function updateGameState(state: GameState, delta: number): GameState {
         const newBullet = createBullet(
           currentState.player.x,
           currentState.player.y - currentState.player.height / 2,
-          true
+          true,
         );
         return {
           ...currentState,
@@ -221,7 +221,7 @@ function createEnemy(x: number, y: number): Enemy {
     0,
     0,
     gameSettings.enemyWidth,
-    gameSettings.enemyHeight
+    gameSettings.enemyHeight,
   );
   enemyGraphics.endFill();
 
@@ -285,10 +285,10 @@ function updateEnemies(state: GameState, delta: number): GameState {
 
   // Check if any enemy has reached the edge
   const leftmostEnemy = state.enemies.reduce((min, enemy) =>
-    enemy.x < min.x ? enemy : min
+    enemy.x < min.x ? enemy : min,
   );
   const rightmostEnemy = state.enemies.reduce((max, enemy) =>
-    enemy.x > max.x ? enemy : max
+    enemy.x > max.x ? enemy : max,
   );
 
   if (
@@ -306,7 +306,7 @@ function updateEnemies(state: GameState, delta: number): GameState {
     // Enemy shooting
     if (Math.random() < gameSettings.enemyShootFrequency * delta) {
       state.bullets.push(
-        createBullet(enemy.x, enemy.y + enemy.height / 2, false)
+        createBullet(enemy.x, enemy.y + enemy.height / 2, false),
       );
     }
 
@@ -379,7 +379,7 @@ function setupGameOverScreen() {
   gameOverBox.endFill();
   gameOverBox.position.set(
     gameSettings.screenWidth / 2 - 150,
-    gameSettings.screenHeight / 2 - 75
+    gameSettings.screenHeight / 2 - 75,
   );
 
   gameOverText = new PIXI.Text("Game Over\n\nPress R to restart", {
@@ -424,11 +424,11 @@ app.ticker.add((ticker) => {
 
     if (
       newGameState.enemies.some(
-        (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight
+        (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight,
       ) ||
       newGameState.player.lives <= 0
     ) {
-      newGameState.gameStatus = "GAME_OVER";
+      newGameState.gameStatus = GameStatus.GAME_OVER;
     }
 
     renderer.render(newGameState);
@@ -475,7 +475,7 @@ app.stage.addChild(scoreText);
 function createButton(
   text: string,
   width: number,
-  height: number
+  height: number,
 ): PIXI.Container {
   const button = new PIXI.Container();
   const background = new PIXI.Graphics();
@@ -496,7 +496,6 @@ function createButton(
   button.addChild(buttonText);
 
   button.interactive = true;
-  button.buttonMode = true;
 
   return button;
 }
@@ -508,7 +507,7 @@ startGameButton.y = gameSettings.screenHeight / 2 - 25;
 
 // Function to start the game
 function startGame() {
-  currentGameState.gameStatus = "PLAYING";
+  currentGameState.gameStatus = GameStatus.PLAYING;
   app.stage.removeChild(startGameButton);
 }
 
@@ -559,7 +558,7 @@ function checkCollisions(state: GameState): GameState {
 
 function checkCollision(
   a: { x: number; y: number; width: number; height: number },
-  b: { x: number; y: number; width: number; height: number }
+  b: { x: number; y: number; width: number; height: number },
 ): boolean {
   return (
     a.x < b.x + b.width &&
