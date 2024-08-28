@@ -437,43 +437,46 @@ app.ticker.add((ticker) => {
 });
 
 function checkCollisions(state: GameState): GameState {
-  const playerBullets = state.bullets.filter((b) => b.isPlayerBullet);
-  const enemyBullets = state.bullets.filter((b) => !b.isPlayerBullet);
+  const newBullets: Bullet[] = [];
 
-  // Check player bullets with enemies
-  playerBullets.forEach((bullet) => {
-    state.enemies = state.enemies.filter((enemy) => {
-      if (checkCollision(bullet, enemy)) {
-        state.score += enemy.points;
-        return false;
-      }
-      return true;
-    });
-  });
+  for (const bullet of state.bullets) {
+    let bulletCollided = false;
 
-  // Check enemy bullets with player
-  enemyBullets.forEach((bullet) => {
-    if (checkCollision(bullet, state.player)) {
-      state.player.lives--;
-      updateLivesDisplay(state.player.lives);
-      if (state.player.lives <= 0) {
-        state.gameOver = true;
+    if (bullet.isPlayerBullet) {
+      // Check player bullets with enemies
+      state.enemies = state.enemies.filter((enemy) => {
+        if (checkCollision(bullet, enemy)) {
+          state.score += enemy.points;
+          bulletCollided = true;
+          return false;
+        }
+        return true;
+      });
+    } else {
+      // Check enemy bullets with player
+      if (checkCollision(bullet, state.player)) {
+        state.player.lives--;
+        updateLivesDisplay(state.player.lives);
+        if (state.player.lives <= 0) {
+          state.gameOver = true;
+        }
+        bulletCollided = true;
       }
     }
-  });
 
-  // Remove collided bullets
-  state.bullets = state.bullets.filter(
-    (bullet) =>
-      !(
-        playerBullets.includes(bullet) &&
-        state.enemies.some((enemy) => checkCollision(bullet, enemy))
-      ) &&
-      !(enemyBullets.includes(bullet) && checkCollision(bullet, state.player))
-  );
+    // Keep the bullet if it hasn't collided
+    if (!bulletCollided) {
+      newBullets.push(bullet);
+    }
+  }
+
+  // Update the bullets in the state
+  state.bullets = newBullets;
 
   return state;
 }
+
+// ... rest of the existing code ...
 
 function checkCollision(
   a: { x: number; y: number; width: number; height: number },
