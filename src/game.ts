@@ -7,7 +7,14 @@ import {
   Container,
   Text,
 } from "pixi.js";
-import { GameState, GameSettings, PlayerAction, Bullet, Enemy } from "./types";
+import {
+  GameState,
+  GameSettings,
+  PlayerAction,
+  Bullet,
+  Enemy,
+  GameStatus,
+} from "./types";
 import heartImageUrl from "./images/heart.png";
 
 // Game settings
@@ -80,6 +87,7 @@ const initialGameState: GameState = {
   level: 1,
   gameOver: false,
   lastShootTime: 0,
+  gameStatus: GameStatus.NOT_STARTED,
 };
 
 // Add player to stage
@@ -358,35 +366,52 @@ class Renderer {
 // Initialize the renderer
 const renderer = new Renderer(playerSprite);
 
-// Create a variable to store the game over text
-let gameOverText: PIXI.Text | null = null;
+// Near the top of the file, add these declarations
+const gameOverContainer = new PIXI.Container();
+let gameOverBox: PIXI.Graphics;
+let gameOverText: PIXI.Text;
 
-// Function to restart the game
-function restartGame() {
-  currentGameState = { ...initialGameState, enemies: initializeEnemies() };
-  updateLivesDisplay(currentGameState.player.lives);
-  if (gameOverText) {
-    app.stage.removeChild(gameOverText);
-    gameOverText = null;
-  }
+// Add this function to set up the game over screen
+function setupGameOverScreen() {
+  gameOverBox = new PIXI.Graphics();
+  gameOverBox.fill(0x000000, 0); // Transparent fill
+  gameOverBox.drawRect(0, 0, 300, 150);
+  gameOverBox.endFill();
+  gameOverBox.position.set(
+    gameSettings.screenWidth / 2 - 150,
+    gameSettings.screenHeight / 2 - 75
+  );
+
+  gameOverText = new PIXI.Text("Game Over\n\nPress R to restart", {
+    fontFamily: "Courier",
+    fontSize: 24,
+    fill: new PIXI.Color("black"),
+    align: "center",
+    fontWeight: "bold",
+    letterSpacing: 2,
+    lineHeight: 28,
+  });
+  gameOverText.anchor.set(0.5);
+  gameOverText.position.set(150, 75);
+  gameOverText.resolution = 0.5; // This makes the text more pixelated
+
+  gameOverBox.addChild(gameOverText);
+  gameOverContainer.addChild(gameOverBox);
 }
 
-// Game loop
-let currentGameState = initialGameState;
+// Call this function after initializing the app
+setupGameOverScreen();
 
-// Create a text object for the score
-const scoreText = new Text("Score: 0", {
-  fontFamily: "Arial",
-  fontSize: 24,
-  fill: 0xffffff,
-});
-scoreText.x = gameSettings.screenWidth - 10;
-scoreText.y = 10;
-scoreText.anchor.set(1, 0);
-app.stage.addChild(scoreText);
-
+// Update the game loop to show/hide the game over container
 app.ticker.add((ticker) => {
-  if (!currentGameState.gameOver) {
+  if (currentGameState.gameStatus === "NOT_STARTED") {
+    if (!app.stage.children.includes(startGameButton)) {
+      app.stage.addChild(startGameButton);
+    }
+    if (keys[" "]) {
+      startGame();
+    }
+  } else if (currentGameState.gameStatus === "PLAYING") {
     let newGameState = updateGameState(currentGameState, ticker.deltaTime);
     newGameState = updateBullets(newGameState, ticker.deltaTime);
     newGameState = updateEnemies(newGameState, ticker.deltaTime);
@@ -403,7 +428,7 @@ app.ticker.add((ticker) => {
       ) ||
       newGameState.player.lives <= 0
     ) {
-      newGameState.gameOver = true;
+      newGameState.gameStatus = "GAME_OVER";
     }
 
     renderer.render(newGameState);
@@ -412,29 +437,83 @@ app.ticker.add((ticker) => {
     // Update score display
     scoreText.text = `Score: ${currentGameState.score}`;
   } else {
-    // Display game over message
-    if (!gameOverText) {
-      gameOverText = new PIXI.Text(
-        `Game Over\nScore: ${currentGameState.score}\nPress R to Restart`,
-        {
-          fontFamily: "Arial",
-          fontSize: 24,
-          fill: 0xffffff,
-          align: "center",
-        }
-      );
-      gameOverText.x = gameSettings.screenWidth / 2;
-      gameOverText.y = gameSettings.screenHeight / 2;
-      gameOverText.anchor.set(0.5);
-      app.stage.addChild(gameOverText);
+    if (!app.stage.children.includes(gameOverContainer)) {
+      app.stage.addChild(gameOverContainer);
     }
-
-    if (keys["r"] || keys["R"]) {
-      // Restart the game
+    if (keys["r"]) {
       restartGame();
     }
   }
 });
+
+// Update the restartGame function
+function restartGame() {
+  currentGameState = {
+    ...initialGameState,
+    enemies: initializeEnemies(),
+    gameStatus: GameStatus.PLAYING,
+  };
+  updateLivesDisplay(currentGameState.player.lives);
+  app.stage.removeChild(gameOverContainer);
+}
+
+// Game loop
+let currentGameState = initialGameState;
+
+// Create a text object for the score
+const scoreText = new Text("Score: 0", {
+  fontFamily: "Arial",
+  fontSize: 24,
+  fill: 0xffffff,
+});
+scoreText.x = gameSettings.screenWidth - 10;
+scoreText.y = 10;
+scoreText.anchor.set(1, 0);
+app.stage.addChild(scoreText);
+
+// Create functions for drawing UI elements
+function createButton(
+  text: string,
+  width: number,
+  height: number
+): PIXI.Container {
+  const button = new PIXI.Container();
+  const background = new PIXI.Graphics();
+  background.beginFill(0x0000ff);
+  background.drawRect(0, 0, width, height);
+  background.endFill();
+  button.addChild(background);
+
+  const buttonText = new PIXI.Text(text, {
+    fontFamily: "Arial",
+    fontSize: 24,
+    fill: 0xffffff,
+    align: "center",
+  });
+  buttonText.x = width / 2;
+  buttonText.y = height / 2;
+  buttonText.anchor.set(0.5);
+  button.addChild(buttonText);
+
+  button.interactive = true;
+  button.buttonMode = true;
+
+  return button;
+}
+
+// Create start game and restart game buttons
+const startGameButton = createButton("Start Game", 200, 50);
+startGameButton.x = gameSettings.screenWidth / 2 - 100;
+startGameButton.y = gameSettings.screenHeight / 2 - 25;
+
+// Function to start the game
+function startGame() {
+  currentGameState.gameStatus = "PLAYING";
+  app.stage.removeChild(startGameButton);
+}
+
+// Add event listeners for buttons
+startGameButton.on("pointerdown", startGame);
 
 function checkCollisions(state: GameState): GameState {
   const newBullets: Bullet[] = [];

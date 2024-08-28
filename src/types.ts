@@ -32,6 +32,7 @@ export interface GameState {
   gameOver: boolean;
   enemyDirection: number;
   lastShootTime: number;
+  gameStatus: GameStatus;
 }
 
 export interface GameSettings {
@@ -74,3 +75,9 @@ type GameEvent =
 
 // Export all interfaces and types
 export type { Entity, Player, Enemy, Bullet, PlayerAction, GameEvent };
+
+export enum GameStatus {
+  NOT_STARTED = "NOT_STARTED",
+  PLAYING = "PLAYING",
+  GAME_OVER = "GAME_OVER",
+}
