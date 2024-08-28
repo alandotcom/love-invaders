@@ -36,8 +36,6 @@ export interface GameState {
 }
 
 export interface GameSettings {
-  screenWidth: number;
-  screenHeight: number;
   playerSpeed: number;
   enemyRows: number;
   enemyCols: number;

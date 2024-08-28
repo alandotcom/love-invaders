@@ -17,10 +17,12 @@ import {
 } from "./types";
 import heartImageUrl from "./images/heart.png";
 
+// Define virtual resolution
+const VIRTUAL_WIDTH = 800;
+const VIRTUAL_HEIGHT = 600;
+
 // Game settings
 const gameSettings: GameSettings = {
-  screenWidth: 800, // Set a fixed width
-  screenHeight: 600, // Set a fixed height
   playerSpeed: 6,
   enemyRows: 3,
   enemyCols: 7,
@@ -43,21 +45,38 @@ const gameSettings: GameSettings = {
   enemyVerticalPadding: 50,
 };
 
+// Function to get container dimensions and calculate scale
+function getContainerScale() {
+  const gameContainer = document.getElementById("game-container");
+  if (!gameContainer) {
+    console.error("Game container not found");
+    return { width: VIRTUAL_WIDTH, height: VIRTUAL_HEIGHT, scale: 1 };
+  }
+  const containerWidth = gameContainer.clientWidth;
+  const containerHeight = gameContainer.clientHeight;
+  const scaleX = containerWidth / VIRTUAL_WIDTH;
+  const scaleY = containerHeight / VIRTUAL_HEIGHT;
+  const scale = Math.min(scaleX, scaleY);
+  return { width: containerWidth, height: containerHeight, scale };
+}
+
+// Initialize the application with virtual dimensions
 const app = new Application();
 
-// Initialize the application
 await app.init({
   background: "#1099bb",
-  width: gameSettings.screenWidth,
-  height: gameSettings.screenHeight,
+  width: VIRTUAL_WIDTH,
+  height: VIRTUAL_HEIGHT,
 });
 
-// Append the canvas to the game container instead of the body
+// Append canvas to game container and set up scaling
 const gameContainer = document.getElementById("game-container");
 if (gameContainer) {
   gameContainer.appendChild(app.canvas);
-} else {
-  console.error("Game container not found");
+
+  // Set up initial scale
+  const { scale } = getContainerScale();
+  app.stage.scale.set(scale);
 }
 
 // Load the spaceship (bunny) texture and heart texture
@@ -175,7 +194,7 @@ function updateGameState(state: GameState, delta: number): GameState {
           player: {
             ...currentState.player,
             x: Math.min(
-              gameSettings.screenWidth,
+              VIRTUAL_WIDTH,
               currentState.player.x + gameSettings.playerSpeed * delta
             ),
           },
@@ -239,7 +258,7 @@ function initializeEnemies(): Enemy[] {
   const startX = gameSettings.enemyHorizontalPadding;
   const startY = gameSettings.enemyVerticalPadding;
   const availableWidth =
-    gameSettings.screenWidth - 2 * gameSettings.enemyHorizontalPadding;
+    VIRTUAL_WIDTH - 2 * gameSettings.enemyHorizontalPadding;
   const totalEnemyWidth =
     gameSettings.enemyCols * gameSettings.enemyWidth +
     (gameSettings.enemyCols - 1) * gameSettings.enemyHorizontalSpacing;
@@ -288,7 +307,7 @@ function updateEnemies(state: GameState, delta: number): GameState {
   if (
     leftmostEnemy.x <= gameSettings.enemyHorizontalPadding ||
     rightmostEnemy.x + rightmostEnemy.width >=
-      gameSettings.screenWidth - gameSettings.enemyHorizontalPadding
+      VIRTUAL_WIDTH - gameSettings.enemyHorizontalPadding
   ) {
     enemyDirection *= -1; // Change direction
     shouldMoveDown = true; // Move down only when reaching an edge
@@ -370,10 +389,7 @@ function setupGameOverScreen() {
   gameOverBox = new PIXI.Graphics();
   gameOverBox.fill({ color: 0x000000, alpha: 0 }); // Transparent fill
   gameOverBox.rect(0, 0, 300, 150);
-  gameOverBox.position.set(
-    gameSettings.screenWidth / 2 - 150,
-    gameSettings.screenHeight / 2 - 75
-  );
+  gameOverBox.position.set(VIRTUAL_WIDTH / 2 - 150, VIRTUAL_HEIGHT / 2 - 75);
 
   gameOverText = new PIXI.Text({
     text: "Game Over\n\nPress R to restart",
@@ -407,12 +423,7 @@ let pauseOverlayText: PIXI.Text;
 function setupPauseOverlay() {
   pauseOverlayBox = new PIXI.Graphics();
   pauseOverlayBox.fill({ color: 0x000000, alpha: 0.5 });
-  pauseOverlayBox.rect(
-    0,
-    0,
-    gameSettings.screenWidth,
-    gameSettings.screenHeight
-  );
+  pauseOverlayBox.rect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
   pauseOverlayText = new PIXI.Text({
     text: "PAUSED\n\nPress P to resume",
@@ -427,10 +438,7 @@ function setupPauseOverlay() {
     },
   });
   pauseOverlayText.anchor.set(0.5);
-  pauseOverlayText.position.set(
-    gameSettings.screenWidth / 2,
-    gameSettings.screenHeight / 2
-  );
+  pauseOverlayText.position.set(VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2);
 
   pauseOverlayContainer.addChild(pauseOverlayBox, pauseOverlayText);
   pauseOverlayContainer.visible = false;
@@ -467,7 +475,7 @@ app.ticker.add((ticker) => {
 
       if (
         newGameState.enemies.some(
-          (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight
+          (enemy) => enemy.y + enemy.height >= VIRTUAL_HEIGHT
         ) ||
         newGameState.player.lives <= 0
       ) {
@@ -519,7 +527,7 @@ const scoreText = new Text({
     fill: 0xffffff,
   },
 });
-scoreText.x = gameSettings.screenWidth - 10;
+scoreText.x = VIRTUAL_WIDTH - 10;
 scoreText.y = 10;
 scoreText.anchor.set(1, 0);
 app.stage.addChild(scoreText);
@@ -557,8 +565,8 @@ function createButton(
 
 // Create start game and restart game buttons
 const startGameButton = createButton("Start Game", 200, 50);
-startGameButton.x = gameSettings.screenWidth / 2 - 100;
-startGameButton.y = gameSettings.screenHeight / 2 - 25;
+startGameButton.x = VIRTUAL_WIDTH / 2 - 100;
+startGameButton.y = VIRTUAL_HEIGHT / 2 - 25;
 
 // Function to start the game
 function startGame() {
@@ -640,3 +648,26 @@ function updateLivesDisplay(lives: number) {
 
 // Initialize lives display
 updateLivesDisplay(initialGameState.player.lives);
+
+// Resize function
+function resizeGame() {
+  const { width, height, scale } = getContainerScale();
+
+  // Scale the stage
+  app.stage.scale.set(scale);
+
+  // Center the stage in the container
+  app.stage.position.set(
+    (width - VIRTUAL_WIDTH * scale) / 2,
+    (height - VIRTUAL_HEIGHT * scale) / 2
+  );
+
+  // Update renderer size
+  app.renderer.resize(width, height);
+}
+
+// Add event listener for window resize
+window.addEventListener("resize", resizeGame);
+
+// Call resizeGame initially to set up the game
+resizeGame();
