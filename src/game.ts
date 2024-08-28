@@ -15,11 +15,12 @@ const gameSettings: GameSettings = {
   maxPlayerBullets: 100,
   bulletSpeed: 4,
   enemyShootFrequency: 0.01,
-  bulletWidth: 7,
-  bulletHeight: 10,
-  playerBulletScale: 5, // Adjust this value to change the size of player bullets
+  playerBulletWidth: 28,
+  playerBulletHeight: 40,
+  enemyBulletWidth: 4,
+  enemyBulletHeight: 4,
   bulletColor: 0xffffff,
-  shootCooldown: 0.3, // seconds
+  shootCooldown: 0.4, // seconds
   enemyWidth: 30,
   enemyHeight: 30,
   enemyHorizontalSpacing: 20,
@@ -96,24 +97,19 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
 
   if (isPlayerBullet) {
     sprite = new Sprite(heartTexture);
-    width = gameSettings.bulletWidth * gameSettings.playerBulletScale;
-    height = gameSettings.bulletHeight * gameSettings.playerBulletScale;
+    width = gameSettings.playerBulletWidth;
+    height = gameSettings.playerBulletHeight;
     sprite.width = width;
     sprite.height = height;
   } else {
     const bulletGraphics = new Graphics();
     bulletGraphics.beginFill(gameSettings.bulletColor);
-    bulletGraphics.drawRect(
-      0,
-      0,
-      gameSettings.bulletWidth,
-      gameSettings.bulletHeight
-    );
+    width = gameSettings.enemyBulletWidth;
+    height = gameSettings.enemyBulletHeight;
+    bulletGraphics.drawRect(0, 0, width, height);
     bulletGraphics.endFill();
     const bulletSprite = app.renderer.generateTexture(bulletGraphics);
     sprite = new Sprite(bulletSprite);
-    width = gameSettings.bulletWidth;
-    height = gameSettings.bulletHeight;
   }
 
   sprite.anchor.set(0.5);

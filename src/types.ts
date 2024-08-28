@@ -45,8 +45,7 @@ export interface GameSettings {
   maxPlayerBullets: number;
   bulletSpeed: number;
   enemyShootFrequency: number;
-  bulletWidth: number; // Add this line
-  bulletHeight: number; // Add this line
+
   bulletColor: number; // Add this line
   shootCooldown: number;
   enemyWidth: number;
@@ -55,7 +54,10 @@ export interface GameSettings {
   enemyVerticalSpacing: number;
   enemyHorizontalPadding: number;
   enemyVerticalPadding: number;
-  playerBulletScale: number; // Add this new property
+  playerBulletWidth: number;
+  playerBulletHeight: number;
+  enemyBulletWidth: number;
+  enemyBulletHeight: number;
 }
 
 // Action and event types
