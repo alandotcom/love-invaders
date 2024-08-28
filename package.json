@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "lint": "oxlint src",
+    "build": "npm run lint && tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "oxlint": "^0.9.0",
     "typescript": "^5.5.3",
     "vite": "^5.4.2"
   },
