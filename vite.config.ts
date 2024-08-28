@@ -1,8 +1,6 @@
-import type { UserConfig } from "vite";
-const config: UserConfig = {
+import { defineConfig } from "vite";
+export default defineConfig({
   build: {
     target: "esnext",
   },
-};
-
-export default config;
+});
