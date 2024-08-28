@@ -90,11 +90,11 @@ function getContainerScale() {
   const playerSprite = new Sprite(spaceshipTexture);
   playerSprite.anchor.set(0.5);
 
-  // Create the initial game state
+  // Update the initialGameState
   const initialGameState: GameState = {
     player: {
-      x: app.screen.width / 2,
-      y: app.screen.height - 50,
+      x: VIRTUAL_WIDTH / 2,
+      y: VIRTUAL_HEIGHT - 50, // Position the player near the bottom
       width: playerSprite.width,
       height: playerSprite.height,
       sprite: playerSprite,
@@ -185,7 +185,7 @@ function getContainerScale() {
               ...currentState.player,
               x: Math.max(
                 0,
-                currentState.player.x - gameSettings.playerSpeed * delta,
+                currentState.player.x - gameSettings.playerSpeed * delta
               ),
             },
           };
@@ -196,7 +196,7 @@ function getContainerScale() {
               ...currentState.player,
               x: Math.min(
                 VIRTUAL_WIDTH,
-                currentState.player.x + gameSettings.playerSpeed * delta,
+                currentState.player.x + gameSettings.playerSpeed * delta
               ),
             },
           };
@@ -204,7 +204,7 @@ function getContainerScale() {
           const newBullet = createBullet(
             currentState.player.x,
             currentState.player.y - currentState.player.height / 2,
-            true,
+            true
           );
           return {
             ...currentState,
@@ -299,10 +299,10 @@ function getContainerScale() {
 
     // Check if any enemy has reached the edge
     const leftmostEnemy = state.enemies.reduce((min, enemy) =>
-      enemy.x < min.x ? enemy : min,
+      enemy.x < min.x ? enemy : min
     );
     const rightmostEnemy = state.enemies.reduce((max, enemy) =>
-      enemy.x > max.x ? enemy : max,
+      enemy.x > max.x ? enemy : max
     );
 
     if (
@@ -320,7 +320,7 @@ function getContainerScale() {
       // Enemy shooting
       if (Math.random() < gameSettings.enemyShootFrequency * delta) {
         state.bullets.push(
-          createBullet(enemy.x, enemy.y + enemy.height / 2, false),
+          createBullet(enemy.x, enemy.y + enemy.height / 2, false)
         );
       }
 
@@ -344,17 +344,25 @@ function getContainerScale() {
     private bulletContainer: Container;
     private enemyContainer: Container;
 
-    constructor(playerSprite: Sprite) {
+    constructor() {
       this.playerSprite = playerSprite;
+      this.playerSprite.x = initialGameState.player.x;
+      this.playerSprite.y = initialGameState.player.y;
       this.bulletContainer = new Container();
       this.enemyContainer = new Container();
-      app.stage.addChild(this.bulletContainer, this.enemyContainer);
+      app.stage.addChild(
+        this.playerSprite,
+        this.bulletContainer,
+        this.enemyContainer
+      );
     }
 
     render(state: GameState) {
       // Update player sprite position
-      this.playerSprite.x = state.player.x;
-      this.playerSprite.y = state.player.y;
+      if (state.gameStatus === GameStatus.PLAYING) {
+        this.playerSprite.x = state.player.x;
+        this.playerSprite.y = state.player.y;
+      }
       this.playerSprite.width = state.player.width;
       this.playerSprite.height = state.player.height;
       this.playerSprite.visible = state.player.lives > 0;
@@ -378,7 +386,7 @@ function getContainerScale() {
   }
 
   // Initialize the renderer
-  const renderer = new Renderer(playerSprite);
+  const renderer = new Renderer();
 
   // Near the top of the file, add these declarations
   const gameOverContainer = new PIXI.Container();
@@ -476,7 +484,7 @@ function getContainerScale() {
 
         if (
           newGameState.enemies.some(
-            (enemy) => enemy.y + enemy.height >= VIRTUAL_HEIGHT,
+            (enemy) => enemy.y + enemy.height >= VIRTUAL_HEIGHT
           ) ||
           newGameState.player.lives <= 0
         ) {
@@ -538,7 +546,7 @@ function getContainerScale() {
   function createButton(
     text: string,
     width: number,
-    height: number,
+    height: number
   ): PIXI.Container {
     const button = new PIXI.Container();
     const background = new PIXI.Graphics()
@@ -623,7 +631,7 @@ function getContainerScale() {
 
   function checkCollision(
     a: { x: number; y: number; width: number; height: number },
-    b: { x: number; y: number; width: number; height: number },
+    b: { x: number; y: number; width: number; height: number }
   ): boolean {
     return (
       a.x < b.x + b.width &&
@@ -663,7 +671,7 @@ function getContainerScale() {
     // Center the stage in the container
     app.stage.position.set(
       (width - VIRTUAL_WIDTH * scale) / 2,
-      (height - VIRTUAL_HEIGHT * scale) / 2,
+      (height - VIRTUAL_HEIGHT * scale) / 2
     );
 
     // Update renderer size
