@@ -8,6 +8,7 @@ import {
   Text,
 } from "pixi.js";
 import { GameState, GameSettings, PlayerAction, Bullet, Enemy } from "./types";
+import heartImageUrl from "./images/heart.png";
 
 // Game settings
 const gameSettings: GameSettings = {
@@ -50,11 +51,14 @@ if (gameContainer) {
   console.error("Game container not found");
 }
 
-// Load the spaceship (bunny) texture.
-const texture = await Assets.load("https://pixijs.com/assets/bunny.png");
+// Load the spaceship (bunny) texture and heart texture
+const [spaceshipTexture, heartTexture] = await Promise.all([
+  Assets.load("https://pixijs.com/assets/bunny.png"),
+  Assets.load(heartImageUrl),
+]);
 
 // Create the player sprite
-const playerSprite = new Sprite(texture);
+const playerSprite = new Sprite(spaceshipTexture);
 playerSprite.anchor.set(0.5);
 
 // Create the initial game state
@@ -92,18 +96,26 @@ window.addEventListener("keyup", (e) => {
 
 // Function to create a bullet
 function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
-  const bulletGraphics = new Graphics();
-  bulletGraphics.beginFill(gameSettings.bulletColor);
-  bulletGraphics.drawRect(
-    0,
-    0,
-    gameSettings.bulletWidth,
-    gameSettings.bulletHeight
-  );
-  bulletGraphics.endFill();
+  let sprite: Sprite;
 
-  const bulletSprite = app.renderer.generateTexture(bulletGraphics);
-  const sprite = new Sprite(bulletSprite);
+  if (isPlayerBullet) {
+    sprite = new Sprite(heartTexture);
+    sprite.width = gameSettings.bulletWidth;
+    sprite.height = gameSettings.bulletHeight;
+  } else {
+    const bulletGraphics = new Graphics();
+    bulletGraphics.beginFill(gameSettings.bulletColor);
+    bulletGraphics.drawRect(
+      0,
+      0,
+      gameSettings.bulletWidth,
+      gameSettings.bulletHeight
+    );
+    bulletGraphics.endFill();
+    const bulletSprite = app.renderer.generateTexture(bulletGraphics);
+    sprite = new Sprite(bulletSprite);
+  }
+
   sprite.anchor.set(0.5);
 
   return {
@@ -466,7 +478,7 @@ app.stage.addChild(livesContainer);
 function updateLivesDisplay(lives: number) {
   livesContainer.removeChildren();
   for (let i = 0; i < lives; i++) {
-    const lifeSprite = new PIXI.Sprite(texture);
+    const lifeSprite = new PIXI.Sprite(heartTexture);
     lifeSprite.width = 20;
     lifeSprite.height = 20;
     lifeSprite.x = 10 + i * 25;
