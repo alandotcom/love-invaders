@@ -1,5 +1,12 @@
 import * as PIXI from "pixi.js";
-import { Application, Assets, Sprite, Graphics, Container } from "pixi.js";
+import {
+  Application,
+  Assets,
+  Sprite,
+  Graphics,
+  Container,
+  Text,
+} from "pixi.js";
 import { GameState, GameSettings, PlayerAction, Bullet, Enemy } from "./types";
 import heartImageUrl from "./images/heart.png";
 
@@ -367,6 +374,17 @@ function restartGame() {
 // Game loop
 let currentGameState = initialGameState;
 
+// Create a text object for the score
+const scoreText = new Text("Score: 0", {
+  fontFamily: "Arial",
+  fontSize: 24,
+  fill: 0xffffff,
+});
+scoreText.x = gameSettings.screenWidth - 10;
+scoreText.y = 10;
+scoreText.anchor.set(1, 0);
+app.stage.addChild(scoreText);
+
 app.ticker.add((ticker) => {
   if (!currentGameState.gameOver) {
     let newGameState = updateGameState(currentGameState, ticker.deltaTime);
@@ -390,6 +408,9 @@ app.ticker.add((ticker) => {
 
     renderer.render(newGameState);
     currentGameState = newGameState;
+
+    // Update score display
+    scoreText.text = `Score: ${currentGameState.score}`;
   } else {
     // Display game over message
     if (!gameOverText) {
