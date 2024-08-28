@@ -427,7 +427,7 @@ function getContainerScale() {
     pauseOverlayBox.rect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
 
     pauseOverlayText = new PIXI.Text({
-      text: "PAUSED\n\nPress P to resume",
+      text: "PAUSED\n\nPress P or SPACE to resume",
       style: {
         fontFamily: "Courier",
         fontSize: 32,
@@ -490,10 +490,11 @@ function getContainerScale() {
         scoreText.text = `Score: ${currentGameState.score}`;
       }
     } else if (currentGameState.gameStatus === GameStatus.PAUSED) {
-      if (keys["p"]) {
+      if (keys["p"] || keys[" "]) {
         currentGameState.gameStatus = GameStatus.PLAYING;
         pauseOverlayContainer.visible = false;
-        keys["p"] = false; // Reset the key state to prevent rapid toggling
+        keys["p"] = false; // Reset the key states to prevent rapid toggling
+        keys[" "] = false;
       }
     } else if (currentGameState.gameStatus === GameStatus.GAME_OVER) {
       if (!app.stage.children.includes(gameOverContainer)) {
@@ -572,7 +573,9 @@ function getContainerScale() {
   // Function to start the game
   function startGame() {
     currentGameState.gameStatus = GameStatus.PLAYING;
-    app.stage.removeChild(startGameButton);
+    if (app.stage.children.includes(startGameButton)) {
+      app.stage.removeChild(startGameButton);
+    }
   }
 
   // Add event listeners for buttons
@@ -672,4 +675,84 @@ function getContainerScale() {
 
   // Call resizeGame initially to set up the game
   resizeGame();
+
+  // Function to export game state
+  function exportGameState(): string {
+    // Create a copy of the game state without non-serializable properties
+    const exportableState = {
+      ...currentGameState,
+      player: {
+        ...currentGameState.player,
+        sprite: null, // Remove sprite reference
+      },
+      enemies: currentGameState.enemies.map((enemy) => ({
+        ...enemy,
+        sprite: null, // Remove sprite reference
+      })),
+      bullets: currentGameState.bullets.map((bullet) => ({
+        ...bullet,
+        sprite: null, // Remove sprite reference
+      })),
+    };
+
+    // Convert to JSON and then to base64
+    return btoa(JSON.stringify(exportableState));
+  }
+
+  // Function to load game state
+  function loadGameState(encodedState: string): void {
+    try {
+      // Decode base64 and parse JSON
+      const decodedState = JSON.parse(atob(encodedState)) as GameState;
+
+      // Recreate sprites and other non-serializable properties
+      decodedState.player.sprite = playerSprite;
+      decodedState.enemies = decodedState.enemies.map((enemy) => ({
+        ...enemy,
+        sprite: createEnemy(enemy.x, enemy.y).sprite,
+      }));
+      decodedState.bullets = decodedState.bullets.map((bullet) => ({
+        ...bullet,
+        sprite: createBullet(bullet.x, bullet.y, bullet.isPlayerBullet).sprite,
+      }));
+
+      // Update the current game state
+      currentGameState = decodedState;
+
+      // Ensure the game is in the correct state
+      if (currentGameState.gameStatus === GameStatus.NOT_STARTED) {
+        currentGameState.gameStatus = GameStatus.PLAYING;
+      }
+
+      // Remove the start button if it's still on the stage
+      if (app.stage.children.includes(startGameButton)) {
+        app.stage.removeChild(startGameButton);
+      }
+
+      // Update the renderer
+      renderer.render(currentGameState);
+
+      // Update score display
+      scoreText.text = `Score: ${currentGameState.score}`;
+
+      // Update lives display
+      updateLivesDisplay(currentGameState.player.lives);
+
+      // Ensure game over container is not visible
+      if (app.stage.children.includes(gameOverContainer)) {
+        app.stage.removeChild(gameOverContainer);
+      }
+
+      // Ensure pause overlay is not visible
+      pauseOverlayContainer.visible = false;
+
+      console.log("Game state loaded successfully");
+    } catch (error) {
+      console.error("Error loading game state:", error);
+    }
+  }
+
+  // Make functions accessible globally
+  (window as any).exportGameState = exportGameState;
+  (window as any).loadGameState = loadGameState;
 })();
