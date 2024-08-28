@@ -1,31 +1,23 @@
 import * as PIXI from "pixi.js";
-import { Application, Assets, Sprite, Graphics, Container } from "pixi.js";
 import {
-  // Player,
-  GameState,
-  GameSettings,
-  PlayerAction,
-  Bullet,
-  Enemy,
-} from "./types";
-
-const app = new Application();
-
-// Initialize the application.
-await app.init({ background: "#1099bb", resizeTo: window });
-
-// Then adding the application's canvas to the DOM body.
-document.body.appendChild(app.canvas);
+  Application,
+  Assets,
+  Sprite,
+  Graphics,
+  Container,
+  Text,
+} from "pixi.js";
+import { GameState, GameSettings, PlayerAction, Bullet, Enemy } from "./types";
 
 // Game settings
 const gameSettings: GameSettings = {
-  screenWidth: app.screen.width,
-  screenHeight: app.screen.height,
+  screenWidth: 800, // Set a fixed width
+  screenHeight: 600, // Set a fixed height
   playerSpeed: 6,
   enemyRows: 3,
   enemyCols: 7,
-  enemyMoveSpeed: 1,
-  enemyVerticalStep: 30,
+  enemyMoveSpeed: 0.5,
+  enemyVerticalStep: 10,
   maxPlayerBullets: 100,
   bulletSpeed: 4,
   enemyShootFrequency: 0.01,
@@ -37,9 +29,26 @@ const gameSettings: GameSettings = {
   enemyHeight: 30,
   enemyHorizontalSpacing: 20,
   enemyVerticalSpacing: 20,
-  enemyHorizontalPadding: 50,
+  enemyHorizontalPadding: 20,
   enemyVerticalPadding: 50,
 };
+
+const app = new Application();
+
+// Initialize the application
+await app.init({
+  background: "#1099bb",
+  width: gameSettings.screenWidth,
+  height: gameSettings.screenHeight,
+});
+
+// Append the canvas to the game container instead of the body
+const gameContainer = document.getElementById("game-container");
+if (gameContainer) {
+  gameContainer.appendChild(app.canvas);
+} else {
+  console.error("Game container not found");
+}
 
 // Load the spaceship (bunny) texture.
 const texture = await Assets.load("https://pixijs.com/assets/bunny.png");
@@ -89,7 +98,7 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
     0,
     0,
     gameSettings.bulletWidth,
-    gameSettings.bulletHeight,
+    gameSettings.bulletHeight
   );
   bulletGraphics.endFill();
 
@@ -134,7 +143,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ...currentState.player,
             x: Math.max(
               0,
-              currentState.player.x - gameSettings.playerSpeed * delta,
+              currentState.player.x - gameSettings.playerSpeed * delta
             ),
           },
         };
@@ -145,7 +154,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ...currentState.player,
             x: Math.min(
               gameSettings.screenWidth,
-              currentState.player.x + gameSettings.playerSpeed * delta,
+              currentState.player.x + gameSettings.playerSpeed * delta
             ),
           },
         };
@@ -153,7 +162,7 @@ function updateGameState(state: GameState, delta: number): GameState {
         const newBullet = createBullet(
           currentState.player.x,
           currentState.player.y - currentState.player.height / 2,
-          true,
+          true
         );
         return {
           ...currentState,
@@ -189,7 +198,7 @@ function createEnemy(x: number, y: number): Enemy {
     0,
     0,
     gameSettings.enemyWidth,
-    gameSettings.enemyHeight,
+    gameSettings.enemyHeight
   );
   enemyGraphics.endFill();
 
@@ -212,11 +221,18 @@ function initializeEnemies(): Enemy[] {
   const enemies: Enemy[] = [];
   const startX = gameSettings.enemyHorizontalPadding;
   const startY = gameSettings.enemyVerticalPadding;
+  const availableWidth =
+    gameSettings.screenWidth - 2 * gameSettings.enemyHorizontalPadding;
+  const totalEnemyWidth =
+    gameSettings.enemyCols * gameSettings.enemyWidth +
+    (gameSettings.enemyCols - 1) * gameSettings.enemyHorizontalSpacing;
+  const leftPadding = (availableWidth - totalEnemyWidth) / 2;
 
   for (let row = 0; row < gameSettings.enemyRows; row++) {
     for (let col = 0; col < gameSettings.enemyCols; col++) {
       const x =
         startX +
+        leftPadding +
         col * (gameSettings.enemyWidth + gameSettings.enemyHorizontalSpacing);
       const y =
         startY +
@@ -232,28 +248,42 @@ function initializeEnemies(): Enemy[] {
 function updateEnemies(state: GameState, delta: number): GameState {
   let enemyDirection = state.enemyDirection;
   let shouldMoveDown = false;
-  let enemySpeed =
-    gameSettings.enemyMoveSpeed *
-    (1 +
-      (gameSettings.enemyRows * gameSettings.enemyCols - state.enemies.length) /
-        (gameSettings.enemyRows * gameSettings.enemyCols));
+
+  // Calculate the base speed and adjust it based on the number of remaining enemies
+  const baseSpeed = gameSettings.enemyMoveSpeed;
+  const speedIncreaseFactor =
+    1 +
+    (gameSettings.enemyRows * gameSettings.enemyCols - state.enemies.length) /
+      (gameSettings.enemyRows * gameSettings.enemyCols);
+  let enemySpeed = baseSpeed * speedIncreaseFactor;
+
+  // Adjust speed based on the number of columns to maintain consistent movement
+  enemySpeed *= gameSettings.enemyCols / 7; // Assuming 7 was the original number of columns
+
+  // Check if any enemy has reached the edge
+  const leftmostEnemy = state.enemies.reduce((min, enemy) =>
+    enemy.x < min.x ? enemy : min
+  );
+  const rightmostEnemy = state.enemies.reduce((max, enemy) =>
+    enemy.x > max.x ? enemy : max
+  );
+
+  if (
+    leftmostEnemy.x <= gameSettings.enemyHorizontalPadding ||
+    rightmostEnemy.x + rightmostEnemy.width >=
+      gameSettings.screenWidth - gameSettings.enemyHorizontalPadding
+  ) {
+    enemyDirection *= -1; // Change direction
+    shouldMoveDown = true; // Move down only when reaching an edge
+  }
 
   const updatedEnemies = state.enemies.map((enemy) => {
     let newX = enemy.x + enemySpeed * enemyDirection * delta;
 
-    if (
-      newX <= gameSettings.enemyHorizontalPadding ||
-      newX >= gameSettings.screenWidth - gameSettings.enemyHorizontalPadding
-    ) {
-      enemyDirection *= -1;
-      shouldMoveDown = true;
-      newX = enemy.x; // Don't move horizontally this frame
-    }
-
     // Enemy shooting
     if (Math.random() < gameSettings.enemyShootFrequency * delta) {
       state.bullets.push(
-        createBullet(enemy.x, enemy.y + enemy.height / 2, false),
+        createBullet(enemy.x, enemy.y + enemy.height / 2, false)
       );
     }
 
@@ -343,7 +373,7 @@ app.ticker.add((ticker) => {
 
     if (
       newGameState.enemies.some(
-        (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight,
+        (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight
       ) ||
       newGameState.player.lives <= 0
     ) {
@@ -362,7 +392,7 @@ app.ticker.add((ticker) => {
           fontSize: 24,
           fill: 0xffffff,
           align: "center",
-        },
+        }
       );
       gameOverText.x = gameSettings.screenWidth / 2;
       gameOverText.y = gameSettings.screenHeight / 2;
@@ -410,7 +440,7 @@ function checkCollisions(state: GameState): GameState {
         playerBullets.includes(bullet) &&
         state.enemies.some((enemy) => checkCollision(bullet, enemy))
       ) &&
-      !(enemyBullets.includes(bullet) && checkCollision(bullet, state.player)),
+      !(enemyBullets.includes(bullet) && checkCollision(bullet, state.player))
   );
 
   return state;
@@ -418,7 +448,7 @@ function checkCollisions(state: GameState): GameState {
 
 function checkCollision(
   a: { x: number; y: number; width: number; height: number },
-  b: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number }
 ): boolean {
   return (
     a.x < b.x + b.width &&

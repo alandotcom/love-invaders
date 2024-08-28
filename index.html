@@ -9,10 +9,19 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #000; /* Optional: adds a black background */
+      }
+      #game-container {
+        /* This will be automatically sized based on your game's canvas */
       }
     </style>
   </head>
   <body>
+    <div id="game-container"></div>
     <script type="module" src="/src/game.ts"></script>
   </body>
 </html>
