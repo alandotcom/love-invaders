@@ -17,6 +17,7 @@ import {
 } from "./types";
 import heartImageUrl from "./images/heart.png";
 import redInvaderImageUrl from "./images/red-invader.png";
+import rubenImageUrl from "./images/ruben.png";
 
 // Define virtual resolution
 const VIRTUAL_WIDTH = 800;
@@ -83,13 +84,15 @@ function getContainerScale() {
 
   // Load the spaceship (bunny) texture and heart texture
   const [spaceshipTexture, heartTexture, redInvader] = await Promise.all([
-    Assets.load("https://pixijs.com/assets/bunny.png"),
+    Assets.load(rubenImageUrl),
     Assets.load(heartImageUrl),
     Assets.load(redInvaderImageUrl),
   ]);
 
   // Create the player sprite
   const playerSprite = new Sprite(spaceshipTexture);
+  playerSprite.width = 50;
+  playerSprite.height = 60;
   playerSprite.anchor.set(0.5);
 
   // Update the initialGameState
