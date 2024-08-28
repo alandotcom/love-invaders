@@ -117,14 +117,13 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
     sprite.width = width;
     sprite.height = height;
   } else {
-    const bulletGraphics = new Graphics();
-    bulletGraphics.beginFill(gameSettings.bulletColor);
     width = gameSettings.enemyBulletWidth;
     height = gameSettings.enemyBulletHeight;
-    bulletGraphics.drawRect(0, 0, width, height);
-    bulletGraphics.endFill();
-    const bulletSprite = app.renderer.generateTexture(bulletGraphics);
-    sprite = new Sprite(bulletSprite);
+    const bulletGraphics = new Graphics()
+      .rect(0, 0, width, height)
+      .fill(gameSettings.bulletColor);
+    const bulletTexture = app.renderer.generateTexture(bulletGraphics);
+    sprite = new Sprite(bulletTexture);
   }
 
   sprite.anchor.set(0.5);
@@ -216,14 +215,9 @@ function updateBullets(state: GameState, delta: number): GameState {
 // Function to create an enemy
 function createEnemy(x: number, y: number): Enemy {
   const enemyGraphics = new Graphics();
-  enemyGraphics.beginFill(0xff0000);
-  enemyGraphics.drawRect(
-    0,
-    0,
-    gameSettings.enemyWidth,
-    gameSettings.enemyHeight,
-  );
-  enemyGraphics.endFill();
+  enemyGraphics
+    .rect(0, 0, gameSettings.enemyWidth, gameSettings.enemyHeight)
+    .fill({ color: new PIXI.Color("red"), alpha: 1 });
 
   const enemySprite = app.renderer.generateTexture(enemyGraphics);
   const sprite = new Sprite(enemySprite);
@@ -374,22 +368,24 @@ let gameOverText: PIXI.Text;
 // Add this function to set up the game over screen
 function setupGameOverScreen() {
   gameOverBox = new PIXI.Graphics();
-  gameOverBox.fill(0x000000, 0); // Transparent fill
-  gameOverBox.drawRect(0, 0, 300, 150);
-  gameOverBox.endFill();
+  gameOverBox.fill({ color: 0x000000, alpha: 0 }); // Transparent fill
+  gameOverBox.rect(0, 0, 300, 150);
   gameOverBox.position.set(
     gameSettings.screenWidth / 2 - 150,
     gameSettings.screenHeight / 2 - 75,
   );
 
-  gameOverText = new PIXI.Text("Game Over\n\nPress R to restart", {
-    fontFamily: "Courier",
-    fontSize: 24,
-    fill: new PIXI.Color("black"),
-    align: "center",
-    fontWeight: "bold",
-    letterSpacing: 2,
-    lineHeight: 28,
+  gameOverText = new PIXI.Text({
+    text: "Game Over\n\nPress R to restart",
+    style: {
+      fontFamily: "Courier",
+      fontSize: 24,
+      fill: new PIXI.Color("black"),
+      align: "center",
+      fontWeight: "bold",
+      letterSpacing: 2,
+      lineHeight: 28,
+    },
   });
   gameOverText.anchor.set(0.5);
   gameOverText.position.set(150, 75);
@@ -461,10 +457,13 @@ function restartGame() {
 let currentGameState = initialGameState;
 
 // Create a text object for the score
-const scoreText = new Text("Score: 0", {
-  fontFamily: "Arial",
-  fontSize: 24,
-  fill: 0xffffff,
+const scoreText = new Text({
+  text: "Score: 0",
+  style: {
+    fontFamily: "Arial",
+    fontSize: 24,
+    fill: 0xffffff,
+  },
 });
 scoreText.x = gameSettings.screenWidth - 10;
 scoreText.y = 10;
@@ -478,17 +477,19 @@ function createButton(
   height: number,
 ): PIXI.Container {
   const button = new PIXI.Container();
-  const background = new PIXI.Graphics();
-  background.beginFill(0x0000ff);
-  background.drawRect(0, 0, width, height);
-  background.endFill();
+  const background = new PIXI.Graphics()
+    .rect(0, 0, width, height)
+    .fill(0x0000ff);
   button.addChild(background);
 
-  const buttonText = new PIXI.Text(text, {
-    fontFamily: "Arial",
-    fontSize: 24,
-    fill: 0xffffff,
-    align: "center",
+  const buttonText = new PIXI.Text({
+    text,
+    style: {
+      fontFamily: "Arial",
+      fontSize: 24,
+      fill: 0xffffff,
+      align: "center",
+    },
   });
   buttonText.x = width / 2;
   buttonText.y = height / 2;
