@@ -55,6 +55,7 @@ export interface GameSettings {
   enemyVerticalSpacing: number;
   enemyHorizontalPadding: number;
   enemyVerticalPadding: number;
+  playerBulletScale: number; // Add this new property
 }
 
 // Action and event types

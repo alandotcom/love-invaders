@@ -1,12 +1,5 @@
 import * as PIXI from "pixi.js";
-import {
-  Application,
-  Assets,
-  Sprite,
-  Graphics,
-  Container,
-  Text,
-} from "pixi.js";
+import { Application, Assets, Sprite, Graphics, Container } from "pixi.js";
 import { GameState, GameSettings, PlayerAction, Bullet, Enemy } from "./types";
 import heartImageUrl from "./images/heart.png";
 
@@ -22,8 +15,9 @@ const gameSettings: GameSettings = {
   maxPlayerBullets: 100,
   bulletSpeed: 4,
   enemyShootFrequency: 0.01,
-  bulletWidth: 5,
-  bulletHeight: 5,
+  bulletWidth: 7,
+  bulletHeight: 10,
+  playerBulletScale: 5, // Adjust this value to change the size of player bullets
   bulletColor: 0xffffff,
   shootCooldown: 0.3, // seconds
   enemyWidth: 30,
@@ -97,11 +91,15 @@ window.addEventListener("keyup", (e) => {
 // Function to create a bullet
 function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
   let sprite: Sprite;
+  let width: number;
+  let height: number;
 
   if (isPlayerBullet) {
     sprite = new Sprite(heartTexture);
-    sprite.width = gameSettings.bulletWidth;
-    sprite.height = gameSettings.bulletHeight;
+    width = gameSettings.bulletWidth * gameSettings.playerBulletScale;
+    height = gameSettings.bulletHeight * gameSettings.playerBulletScale;
+    sprite.width = width;
+    sprite.height = height;
   } else {
     const bulletGraphics = new Graphics();
     bulletGraphics.beginFill(gameSettings.bulletColor);
@@ -114,6 +112,8 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
     bulletGraphics.endFill();
     const bulletSprite = app.renderer.generateTexture(bulletGraphics);
     sprite = new Sprite(bulletSprite);
+    width = gameSettings.bulletWidth;
+    height = gameSettings.bulletHeight;
   }
 
   sprite.anchor.set(0.5);
@@ -121,8 +121,8 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
   return {
     x,
     y,
-    width: gameSettings.bulletWidth,
-    height: gameSettings.bulletHeight,
+    width,
+    height,
     speed: isPlayerBullet
       ? gameSettings.bulletSpeed
       : -gameSettings.bulletSpeed / 2,
