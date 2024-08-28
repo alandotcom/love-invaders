@@ -1,7 +1,7 @@
 import { Sprite } from "pixi.js";
 
 // Basic game entity interfaces
-interface Entity {
+export interface Entity {
   x: number;
   y: number;
   width: number;
@@ -9,15 +9,15 @@ interface Entity {
   sprite: Sprite;
 }
 
-interface Player extends Entity {
+export interface Player extends Entity {
   lives: number;
 }
 
-interface Enemy extends Entity {
+export interface Enemy extends Entity {
   points: number;
 }
 
-interface Bullet extends Entity {
+export interface Bullet extends Entity {
   speed: number;
   isPlayerBullet: boolean;
 }
@@ -62,19 +62,11 @@ export interface GameSettings {
 }
 
 // Action and event types
-type PlayerAction =
-  | { type: "MOVE_LEFT" }
-  | { type: "MOVE_RIGHT" }
-  | { type: "SHOOT" };
-
-type GameEvent =
-  | { type: "ENEMY_HIT"; enemy: Enemy }
-  | { type: "PLAYER_HIT" }
-  | { type: "ENEMY_REACHED_BOTTOM" }
-  | { type: "LEVEL_COMPLETE" };
-
-// Export all interfaces and types
-export type { Entity, Player, Enemy, Bullet, PlayerAction, GameEvent };
+export enum PlayerAction {
+  MoveLeft = "MOVE_LEFT",
+  MoveRight = "MOVE_RIGHT",
+  Shoot = "SHOOT",
+}
 
 export enum GameStatus {
   NOT_STARTED = "NOT_STARTED",

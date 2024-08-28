@@ -144,8 +144,8 @@ function createBullet(x: number, y: number, isPlayerBullet: boolean): Bullet {
 // Function to update game state
 function updateGameState(state: GameState, delta: number): GameState {
   const actions: PlayerAction[] = [];
-  if (keys["ArrowLeft"]) actions.push({ type: "MOVE_LEFT" });
-  if (keys["ArrowRight"]) actions.push({ type: "MOVE_RIGHT" });
+  if (keys["ArrowLeft"]) actions.push(PlayerAction.MoveLeft);
+  if (keys["ArrowRight"]) actions.push(PlayerAction.MoveRight);
   if (
     keys[" "] &&
     state.lastShootTime + gameSettings.shootCooldown <
@@ -153,12 +153,12 @@ function updateGameState(state: GameState, delta: number): GameState {
     state.bullets.filter((b) => b.isPlayerBullet).length <
       gameSettings.maxPlayerBullets
   ) {
-    actions.push({ type: "SHOOT" });
+    actions.push(PlayerAction.Shoot);
   }
 
   return actions.reduce((currentState, action) => {
-    switch (action.type) {
-      case "MOVE_LEFT":
+    switch (action) {
+      case PlayerAction.MoveLeft:
         return {
           ...currentState,
           player: {
@@ -169,7 +169,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ),
           },
         };
-      case "MOVE_RIGHT":
+      case PlayerAction.MoveRight:
         return {
           ...currentState,
           player: {
@@ -180,7 +180,7 @@ function updateGameState(state: GameState, delta: number): GameState {
             ),
           },
         };
-      case "SHOOT":
+      case PlayerAction.Shoot:
         const newBullet = createBullet(
           currentState.player.x,
           currentState.player.y - currentState.player.height / 2,
