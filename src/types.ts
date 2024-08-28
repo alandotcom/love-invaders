@@ -72,4 +72,5 @@ export enum GameStatus {
   NOT_STARTED = "NOT_STARTED",
   PLAYING = "PLAYING",
   GAME_OVER = "GAME_OVER",
+  PAUSED = "PAUSED",
 }

@@ -398,41 +398,95 @@ function setupGameOverScreen() {
 // Call this function after initializing the app
 setupGameOverScreen();
 
+// Add these declarations near the top of the file
+const pauseOverlayContainer = new PIXI.Container();
+let pauseOverlayBox: PIXI.Graphics;
+let pauseOverlayText: PIXI.Text;
+
+// Add this function to set up the pause overlay
+function setupPauseOverlay() {
+  pauseOverlayBox = new PIXI.Graphics();
+  pauseOverlayBox.fill({ color: 0x000000, alpha: 0.5 });
+  pauseOverlayBox.rect(
+    0,
+    0,
+    gameSettings.screenWidth,
+    gameSettings.screenHeight
+  );
+
+  pauseOverlayText = new PIXI.Text({
+    text: "PAUSED\n\nPress P to resume",
+    style: {
+      fontFamily: "Courier",
+      fontSize: 32,
+      fill: new PIXI.Color("white"),
+      align: "center",
+      fontWeight: "bold",
+      letterSpacing: 2,
+      lineHeight: 36,
+    },
+  });
+  pauseOverlayText.anchor.set(0.5);
+  pauseOverlayText.position.set(
+    gameSettings.screenWidth / 2,
+    gameSettings.screenHeight / 2
+  );
+
+  pauseOverlayContainer.addChild(pauseOverlayBox, pauseOverlayText);
+  pauseOverlayContainer.visible = false;
+  app.stage.addChild(pauseOverlayContainer);
+}
+
+// Call this function after initializing the app
+setupPauseOverlay();
+
 // Update the game loop to show/hide the game over container
 app.ticker.add((ticker) => {
-  if (currentGameState.gameStatus === "NOT_STARTED") {
+  if (currentGameState.gameStatus === GameStatus.NOT_STARTED) {
     if (!app.stage.children.includes(startGameButton)) {
       app.stage.addChild(startGameButton);
     }
     if (keys[" "]) {
       startGame();
     }
-  } else if (currentGameState.gameStatus === "PLAYING") {
-    let newGameState = updateGameState(currentGameState, ticker.deltaTime);
-    newGameState = updateBullets(newGameState, ticker.deltaTime);
-    newGameState = updateEnemies(newGameState, ticker.deltaTime);
-    newGameState = checkCollisions(newGameState);
+  } else if (currentGameState.gameStatus === GameStatus.PLAYING) {
+    if (keys["p"]) {
+      currentGameState.gameStatus = GameStatus.PAUSED;
+      pauseOverlayContainer.visible = true;
+      keys["p"] = false; // Reset the key state to prevent rapid toggling
+    } else {
+      let newGameState = updateGameState(currentGameState, ticker.deltaTime);
+      newGameState = updateBullets(newGameState, ticker.deltaTime);
+      newGameState = updateEnemies(newGameState, ticker.deltaTime);
+      newGameState = checkCollisions(newGameState);
 
-    if (newGameState.enemies.length === 0) {
-      newGameState.level++;
-      newGameState.enemies = initializeEnemies();
+      if (newGameState.enemies.length === 0) {
+        newGameState.level++;
+        newGameState.enemies = initializeEnemies();
+      }
+
+      if (
+        newGameState.enemies.some(
+          (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight
+        ) ||
+        newGameState.player.lives <= 0
+      ) {
+        newGameState.gameStatus = GameStatus.GAME_OVER;
+      }
+
+      renderer.render(newGameState);
+      currentGameState = newGameState;
+
+      // Update score display
+      scoreText.text = `Score: ${currentGameState.score}`;
     }
-
-    if (
-      newGameState.enemies.some(
-        (enemy) => enemy.y + enemy.height >= gameSettings.screenHeight
-      ) ||
-      newGameState.player.lives <= 0
-    ) {
-      newGameState.gameStatus = GameStatus.GAME_OVER;
+  } else if (currentGameState.gameStatus === GameStatus.PAUSED) {
+    if (keys["p"]) {
+      currentGameState.gameStatus = GameStatus.PLAYING;
+      pauseOverlayContainer.visible = false;
+      keys["p"] = false; // Reset the key state to prevent rapid toggling
     }
-
-    renderer.render(newGameState);
-    currentGameState = newGameState;
-
-    // Update score display
-    scoreText.text = `Score: ${currentGameState.score}`;
-  } else {
+  } else if (currentGameState.gameStatus === GameStatus.GAME_OVER) {
     if (!app.stage.children.includes(gameOverContainer)) {
       app.stage.addChild(gameOverContainer);
     }
