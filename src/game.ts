@@ -19,6 +19,7 @@ import redInvaderImageUrl from "./images/red-invader.png";
 import sprayCanImageUrl from "./images/spray-can.png";
 import loveLovoUrl from "./images/love-red.png";
 import heartImageUrl from "./images/heart.png";
+import backgroundImageUrl from "./images/background.png";
 
 // Define virtual resolution
 const VIRTUAL_WIDTH = 800;
@@ -64,11 +65,11 @@ function getContainerScale() {
 }
 
 (async () => {
-  // Initialize the application with virtual dimensions
+  // Initialize the application with virtual dimensions and white background
   const app = new Application();
 
   await app.init({
-    background: "#1099bb",
+    background: new PIXI.Color("black"),
     width: VIRTUAL_WIDTH,
     height: VIRTUAL_HEIGHT,
   });
@@ -84,13 +85,27 @@ function getContainerScale() {
   }
 
   // Load the spaceship (bunny) texture and heart texture
-  const [spaceshipTexture, playerBulletTexture, redInvader, heartTexture] =
-    await Promise.all([
-      Assets.load(sprayCanImageUrl),
-      Assets.load(loveLovoUrl),
-      Assets.load(redInvaderImageUrl),
-      Assets.load(heartImageUrl),
-    ]);
+  const [
+    spaceshipTexture,
+    playerBulletTexture,
+    redInvader,
+    heartTexture,
+    backgroundTexture,
+  ] = await Promise.all([
+    Assets.load(sprayCanImageUrl),
+    Assets.load(loveLovoUrl),
+    Assets.load(redInvaderImageUrl),
+    Assets.load(heartImageUrl),
+    Assets.load(backgroundImageUrl),
+  ]);
+
+  // Create the background sprite
+  const backgroundSprite = new Sprite(backgroundTexture);
+  backgroundSprite.width = VIRTUAL_WIDTH;
+  backgroundSprite.height = VIRTUAL_HEIGHT;
+
+  // Add the background sprite to the stage (ensure it's added first)
+  app.stage.addChildAt(backgroundSprite, 0);
 
   // Create the player sprite
   const playerSprite = new Sprite(spaceshipTexture);
@@ -194,7 +209,7 @@ function getContainerScale() {
               ...currentState.player,
               x: Math.max(
                 0,
-                currentState.player.x - gameSettings.playerSpeed * delta,
+                currentState.player.x - gameSettings.playerSpeed * delta
               ),
             },
           };
@@ -205,7 +220,7 @@ function getContainerScale() {
               ...currentState.player,
               x: Math.min(
                 VIRTUAL_WIDTH,
-                currentState.player.x + gameSettings.playerSpeed * delta,
+                currentState.player.x + gameSettings.playerSpeed * delta
               ),
             },
           };
@@ -213,7 +228,7 @@ function getContainerScale() {
           const newBullet = createBullet(
             currentState.player.x,
             currentState.player.y - currentState.player.height / 2,
-            true,
+            true
           );
           return {
             ...currentState,
@@ -304,10 +319,10 @@ function getContainerScale() {
 
     // Check if any enemy has reached the edge
     const leftmostEnemy = state.enemies.reduce((min, enemy) =>
-      enemy.x < min.x ? enemy : min,
+      enemy.x < min.x ? enemy : min
     );
     const rightmostEnemy = state.enemies.reduce((max, enemy) =>
-      enemy.x > max.x ? enemy : max,
+      enemy.x > max.x ? enemy : max
     );
 
     if (
@@ -325,7 +340,7 @@ function getContainerScale() {
       // Enemy shooting
       if (Math.random() < gameSettings.enemyShootFrequency * delta) {
         state.bullets.push(
-          createBullet(enemy.x, enemy.y + enemy.height / 2, false),
+          createBullet(enemy.x, enemy.y + enemy.height / 2, false)
         );
       }
 
@@ -348,6 +363,7 @@ function getContainerScale() {
     private playerSprite: Sprite;
     private bulletContainer: Container;
     private enemyContainer: Container;
+    private backgroundSprite: Sprite;
 
     constructor() {
       this.playerSprite = playerSprite;
@@ -355,10 +371,14 @@ function getContainerScale() {
       this.playerSprite.y = initialGameState.player.y;
       this.bulletContainer = new Container();
       this.enemyContainer = new Container();
+      this.backgroundSprite = backgroundSprite;
+
+      // Ensure the background is added first
+      app.stage.addChildAt(this.backgroundSprite, 0);
       app.stage.addChild(
         this.playerSprite,
         this.bulletContainer,
-        this.enemyContainer,
+        this.enemyContainer
       );
     }
 
@@ -410,7 +430,7 @@ function getContainerScale() {
       style: {
         fontFamily: "Courier",
         fontSize: 24,
-        fill: new PIXI.Color("black"),
+        fill: new PIXI.Color("white"),
         align: "center",
         fontWeight: "bold",
         letterSpacing: 2,
@@ -489,7 +509,7 @@ function getContainerScale() {
 
         if (
           newGameState.enemies.some(
-            (enemy) => enemy.y + enemy.height >= VIRTUAL_HEIGHT,
+            (enemy) => enemy.y + enemy.height >= VIRTUAL_HEIGHT
           ) ||
           newGameState.player.lives <= 0
         ) {
@@ -551,12 +571,12 @@ function getContainerScale() {
   function createButton(
     text: string,
     width: number,
-    height: number,
+    height: number
   ): PIXI.Container {
     const button = new PIXI.Container();
     const background = new PIXI.Graphics()
-      .rect(0, 0, width, height)
-      .fill(0x0000ff);
+      .roundRect(0, 0, width, height, 10)
+      .fill(new PIXI.Color("gray"));
     button.addChild(background);
 
     const buttonText = new PIXI.Text({
@@ -636,7 +656,7 @@ function getContainerScale() {
 
   function checkCollision(
     a: { x: number; y: number; width: number; height: number },
-    b: { x: number; y: number; width: number; height: number },
+    b: { x: number; y: number; width: number; height: number }
   ): boolean {
     return (
       a.x < b.x + b.width &&
@@ -676,7 +696,7 @@ function getContainerScale() {
     // Center the stage in the container
     app.stage.position.set(
       (width - VIRTUAL_WIDTH * scale) / 2,
-      (height - VIRTUAL_HEIGHT * scale) / 2,
+      (height - VIRTUAL_HEIGHT * scale) / 2
     );
 
     // Update renderer size
