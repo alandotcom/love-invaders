@@ -15,9 +15,10 @@ import {
   Enemy,
   GameStatus,
 } from "./types";
-import heartImageUrl from "./images/heart.png";
 import redInvaderImageUrl from "./images/red-invader.png";
-import rubenImageUrl from "./images/ruben.png";
+import sprayCanImageUrl from "./images/spray-can.png";
+import loveLovoUrl from "./images/love-red.png";
+import heartImageUrl from "./images/heart.png";
 
 // Define virtual resolution
 const VIRTUAL_WIDTH = 800;
@@ -33,14 +34,14 @@ const gameSettings: GameSettings = {
   maxPlayerBullets: 100,
   bulletSpeed: 4,
   enemyShootFrequency: 0.003,
-  playerBulletWidth: 20,
-  playerBulletHeight: 20,
+  playerBulletWidth: 50,
+  playerBulletHeight: 45,
   enemyBulletWidth: 4,
   enemyBulletHeight: 4,
   bulletColor: 0xffffff,
   shootCooldown: 0.4, // seconds
-  enemyWidth: 30,
-  enemyHeight: 30,
+  enemyWidth: 50,
+  enemyHeight: 40,
   enemyHorizontalSpacing: 20,
   enemyVerticalSpacing: 20,
   enemyHorizontalPadding: 20,
@@ -83,16 +84,19 @@ function getContainerScale() {
   }
 
   // Load the spaceship (bunny) texture and heart texture
-  const [spaceshipTexture, heartTexture, redInvader] = await Promise.all([
-    Assets.load(rubenImageUrl),
-    Assets.load(heartImageUrl),
-    Assets.load(redInvaderImageUrl),
-  ]);
+  const [spaceshipTexture, playerBulletTexture, redInvader, heartTexture] =
+    await Promise.all([
+      Assets.load(sprayCanImageUrl),
+      Assets.load(loveLovoUrl),
+      Assets.load(redInvaderImageUrl),
+      Assets.load(heartImageUrl),
+    ]);
 
   // Create the player sprite
   const playerSprite = new Sprite(spaceshipTexture);
-  playerSprite.width = 50;
+  playerSprite.width = 40;
   playerSprite.height = 60;
+  playerSprite.rotation = 50;
   playerSprite.anchor.set(0.5);
 
   // Update the initialGameState
@@ -136,7 +140,7 @@ function getContainerScale() {
     let height: number;
 
     if (isPlayerBullet) {
-      sprite = new Sprite(heartTexture);
+      sprite = new Sprite(playerBulletTexture);
       width = gameSettings.playerBulletWidth;
       height = gameSettings.playerBulletHeight;
       sprite.width = width;
