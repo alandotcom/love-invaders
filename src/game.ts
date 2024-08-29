@@ -575,8 +575,8 @@ function getContainerScale() {
   ): PIXI.Container {
     const button = new PIXI.Container();
     const background = new PIXI.Graphics()
-      .roundRect(0, 0, width, height, 10)
-      .fill(new PIXI.Color("gray"));
+      .roundRect(0, 0, width, height, 5)
+      .fill({ color: 0x0000ff, alpha: 0.25 }); // Transparent blue background
     button.addChild(background);
 
     const buttonText = new PIXI.Text({
