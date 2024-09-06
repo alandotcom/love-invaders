@@ -31,7 +31,7 @@ const gameSettings: GameSettings = {
   enemyRows: 3,
   enemyCols: 7,
   enemyMoveSpeed: 0.5,
-  enemyVerticalStep: 10,
+  enemyVerticalStep: 20,
   maxPlayerBullets: 100,
   bulletSpeed: 4,
   enemyShootFrequency: 0.003,
@@ -45,7 +45,7 @@ const gameSettings: GameSettings = {
   enemyHeight: 40,
   enemyHorizontalSpacing: 20,
   enemyVerticalSpacing: 20,
-  enemyHorizontalPadding: 20,
+  enemyHorizontalPadding: 50,
   enemyVerticalPadding: 50,
 };
 
